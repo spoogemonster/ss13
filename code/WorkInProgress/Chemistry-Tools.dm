@@ -1000,6 +1000,72 @@
 			icon_state = "beaker1"
 		else
 			icon_state = "beaker0"
+			
+/obj/item/weapon/reagent_containers/glass/bong
+	name = "bong"
+	desc = "A sweet glass bong. The colors are wicked sick."
+	icon = 'bong.dmi'
+	icon_state = "bong0"
+	item_state = "emptybong"
+	var/lit = 0
+	var/smoketime = 200
+	
+	on_reagent_change()
+		if(reagents.total_volume)
+			icon_state = "bong1"
+			item_state = "fullbong"
+		else
+			icon_state = "bong0"
+			if(lit)
+				lit = 0
+			
+	attackby(obj/item/weapon/W as obj, mob/user as mob)
+		if(istype(W, /obj/item/weapon/weldingtool)  && W:welding)
+			if(src.lit == 0 && src.reagents.total_volume)
+				src.lit = 1
+				src.icon_state = "bong2"
+				src.item_state = "litbong"
+				for(var/mob/O in viewers(user, null))
+					O.show_message(text("\red [] holds the [] to the bong stem and inhales deeply.", user, W), 1) //Smokes weed erryday
+				spawn() //start fires while it's lit
+					src.process()
+		else if(istype(W, /obj/item/weapon/zippo) && W:lit)
+			if(src.lit == 0 && src.reagents.total_volume)
+			//todo check if the motherfucker's just smoking water
+				src.lit = 1
+				src.icon_state = "bong2"
+				src.item_state = "litbong"
+				for(var/mob/O in viewers(user, null))
+					O.show_message(text("\red With a single flick of his wrist, [] smoothly lights his [] and holds the flame to the bong stem. Damn they're cool.", user, W), 1)
+				spawn() //start fires while it's lit
+					src.process()
+	
+	process()
+		var/mob/M = null
+		
+		if(istype(src.loc, /mob/))
+			M = src.loc
+			
+		while(src.lit == 1)
+			src.smoketime--
+
+			if(reagents.total_volume && !(smoketime % 20))
+				reagents.reaction(M, INGEST)
+				spawn(5)
+					if(reagents.total_volume >= 5)
+						reagents.trans_to(M, 5)
+					else
+						reagents.trans_to(M, reagents.total_volume)	
+						//TODO transfer only the non-water stuff
+				
+			if(src.smoketime < 1)
+				if(M)
+					M << "\red you suck on the bong and get nothing but air. It's cached, man."
+				src.item_state = "emptybong"
+				src.icon_state = "bong0"
+				src.lit = 0
+					
+			sleep(10)
 
 /obj/item/weapon/reagent_containers/glass/beaker/cryoxadone
 	name = "beaker"

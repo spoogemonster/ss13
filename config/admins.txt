@@ -1,3 +1,4 @@
+spoogemonster - Host
 slurm - Host
 gibbed - Host
 stuntwaffle - Host
