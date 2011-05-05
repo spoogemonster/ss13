@@ -1185,6 +1185,13 @@
 		R.my_atom = src
 		R.add_reagent("nanites", 5)
 
+/obj/item/weapon/reagent_containers/food/snacks/hotdog
+	name = "hotdog"
+	desc = "a hotdog"
+	icon_state = "hotdog"
+	amount = 1
+	heal_amt = 1
+
 /obj/item/weapon/reagent_containers/food/snacks/monkeymeat
 	name = "meat"
 	desc = "A slab of meat"
