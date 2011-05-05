@@ -1006,25 +1006,23 @@
 	desc = "A sweet glass bong. The colors are wicked sick."
 	icon = 'bong.dmi'
 	icon_state = "bong0"
-	item_state = "emptybong"
+	item_state = "bong"
 	var/lit = 0
 	var/smoketime = 200
 	
 	on_reagent_change()
-		if(reagents.total_volume)
+		if(reagents.total_volume && !lit)
 			icon_state = "bong1"
-			item_state = "fullbong"
+		else if(reagents.total_volume && lit)
+			icon_state = "bong2"
 		else
 			icon_state = "bong0"
-			if(lit)
-				lit = 0
 			
 	attackby(obj/item/weapon/W as obj, mob/user as mob)
 		if(istype(W, /obj/item/weapon/weldingtool)  && W:welding)
 			if(src.lit == 0 && src.reagents.total_volume)
 				src.lit = 1
 				src.icon_state = "bong2"
-				src.item_state = "litbong"
 				for(var/mob/O in viewers(user, null))
 					O.show_message(text("\red [] holds the [] to the bong stem and inhales deeply.", user, W), 1) //Smokes weed erryday
 				spawn() //start fires while it's lit
@@ -1034,7 +1032,6 @@
 			//todo check if the motherfucker's just smoking water
 				src.lit = 1
 				src.icon_state = "bong2"
-				src.item_state = "litbong"
 				for(var/mob/O in viewers(user, null))
 					O.show_message(text("\red With a single flick of his wrist, [] smoothly lights his [] and holds the flame to the bong stem. Damn they're cool.", user, W), 1)
 				spawn() //start fires while it's lit
@@ -1049,14 +1046,14 @@
 		while(src.lit == 1)
 			src.smoketime--
 
-			if(reagents.total_volume && !(smoketime % 20))
+			if(reagents.total_volume)
 				reagents.reaction(M, INGEST)
 				spawn(5)
-					if(reagents.total_volume >= 5)
-						reagents.trans_to(M, 5)
-					else
-						reagents.trans_to(M, reagents.total_volume)	
+					if(reagents.total_volume)
+						reagents.trans_to(M, 0.1)
 						//TODO transfer only the non-water stuff
+			else
+				lit = 0
 				
 			if(src.smoketime < 1)
 				if(M)
