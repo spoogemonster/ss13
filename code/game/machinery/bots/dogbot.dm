@@ -26,9 +26,10 @@
 #define DOGBOT_FINDFOOD			1	// find food and eat it
 #define DOGBOT_EAT				2	// eat the food
 #define DOGBOT_FIND_MASTER		3	// Locate master and follow
-#define DOGBOT_FOLLOW			4	// Follow master
-#define DOGBOT_PROTECT_MASTER	5	// Attack people who attack master
-#define DOGBOT_PROTECT_SELF		6	// Attack person who attacks dogbot
+#define DOGBOT_HEAL_MASTER		4
+#define DOGBOT_FOLLOW			5	// Follow master
+#define DOGBOT_PROTECT_MASTER	6	// Attack people who attack master
+#define DOGBOT_PROTECT_SELF		7	// Attack person who attacks dogbot
 
 	var/obj/machinery/camera/cam //Dogbot has a camera
 
@@ -58,8 +59,8 @@
 	attack_hand(user as mob)
 		var/dat
 
-		if (master == null)
-			master = user
+		if (master == null) //We should be able to set the bot's master from the assembly, but if its admin created, this should fix it.
+			master = user // lol hack -- replace this with new master has to feed it some poo or a dogbiscuit.
 
 		dat += text({"
 <TT><B>Dogbot Version 0.1b</B></TT><BR><BR>
@@ -119,9 +120,14 @@ Status: []"}, "<A href='?src=\ref[src];power=1'>[src.on ? "On" : "Off"]</A>" )
 	process()
 		set background = 1
 
-		if(!src.on)
+		if (!src.on)
 			return
-
+			#define DEBUG
+		//check on master
+		for (var/mob/living/carbon/C in view(7,src))
+			if(C == master)	
+				assess_master(C)
+			
 		switch(mode)
 			//if(DOGBOT_IDLE)		//idle
 				//look for enemy
@@ -135,6 +141,9 @@ Status: []"}, "<A href='?src=\ref[src];power=1'>[src.on ? "On" : "Off"]</A>" )
 			//if(DOGBOT_FIND_MASTER)
 			//Find a path to master and follow it. If the master's position changes, recalculate
 
+			//if(DOGBOT_HEAL_MASTER)
+			//If master is hurt, heal master!
+			
 			//if(DOGBOT_FOLLOW)
 			//Found master, now follow. If master gets more than 10 tile distance away, find master
 
@@ -145,6 +154,28 @@ Status: []"}, "<A href='?src=\ref[src];power=1'>[src.on ? "On" : "Off"]</A>" )
 
 		return
 
+	proc/assess_master(mob/living/carbon/C as mob)
+		if(C.stat == 2)
+			master = null
+			doggymote("howls sadly and nudges [C]'s corpse with its little wet nose. How tragic!")
+			mode = DOGBOT_IDLE
+			return 	//Master's dead, time to find a new master.
+			
+		if(C.suiciding)
+			master = null
+			return
+			
+		if(C.bruteloss >= 15 || C.fireloss >= 15)
+			mode = DOGBOT_HEAL_MASTER // PAPAS INJURED LICK HIS PRIVATES!
+			return
+			
+	proc/doggymote(var/message)
+		if((!src.on) || (!message))
+			return
+		for(var/mob/O in hearers(src, null))
+			O.show_message("\red [src] [message]",2)
+		return
+	
 	proc/findmaster()
 		//find a path to master
 		src.explode()
